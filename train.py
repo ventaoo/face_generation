@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     attr_dataframe = pd.read_csv(ATTR_PATH)
     image_male_dict = attr_dataframe.set_index('image_id')['Male'].to_dict()
-    
+
     if not os.path.exists(CROP_PATH): 
         crop_faces(DATASET_PATH, CROP_PATH, image_male_dict, ratio=0.1)
     else: print('Dataset crop done.')
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     for dir_path, dirnames, filenames in os.walk(CROP_PATH):
         for file in filenames:
             images.append(os.path.join(dir_path, file))
-
+    print(f"Len of the images: {len(images)}")
     train_images, test_images = images[: int(len(images) * 0.9)], images[int(len(images) * 0.9): ]
 
     train_dataset = CelebADataset(train_images, image_male_dict, transform)
