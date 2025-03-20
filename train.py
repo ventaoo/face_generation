@@ -225,6 +225,7 @@ if __name__ == "__main__":
 
     attr_dataframe = pd.read_csv(ATTR_PATH)
     image_male_dict = attr_dataframe.set_index('image_id')['Male'].to_dict()
+    print(f"image_male_dict: {image_male_dict}")
 
     if not os.path.exists(CROP_PATH): 
         crop_faces(DATASET_PATH, CROP_PATH, image_male_dict, ratio=0.1)
