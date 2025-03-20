@@ -239,7 +239,7 @@ if __name__ == "__main__":
     ])
     images = []
     for dir_path, dirnames, filenames in os.walk(CROP_PATH):
-        for file in filenames:
+        for file in tqdm(filenames):
             images.append(os.path.join(dir_path, file))
     print(f"Len of the images: {len(images)}")
     train_images, test_images = images[: int(len(images) * 0.9)], images[int(len(images) * 0.9): ]

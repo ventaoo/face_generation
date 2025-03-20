@@ -48,4 +48,5 @@ def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), r
         
         # 保存结果
         output_path = os.path.join(os.path.join(output_dir, 'male' if image_male_dict.get(key) == 1 else 'female'), img_name)
+        print(output_path)
         cv2.imwrite(output_path, cv2.cvtColor(face, cv2.COLOR_RGB2BGR))
