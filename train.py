@@ -17,6 +17,7 @@ from torchmetrics.image.inception import InceptionScore
 from dataset.dataset import CelebADataset
 from gan.discriminator import Discriminator
 from gan.generator import Generator
+from crop_util import crop_faces
 
 # 训练函数封装
 def train_wgan(
@@ -220,6 +221,11 @@ if __name__ == "__main__":
 
     CROP_PATH = './crop_img'
     ATTR_PATH = './2/list_attr_celeba.csv'
+    DATASET_PATH = './2/img_align_celeba/img_align_celeba'
+
+    if not os.path.exists(CROP_PATH): 
+        crop_faces(DATASET_PATH, CROP_PATH, ratio=0.1)
+    else: print('Dataset crop done.')
 
     attr_dataframe = pd.read_csv(ATTR_PATH)
     image_male_dict = attr_dataframe.set_index('image_id')['Male'].to_dict()
