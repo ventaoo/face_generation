@@ -223,12 +223,12 @@ if __name__ == "__main__":
     ATTR_PATH = './2/list_attr_celeba.csv'
     DATASET_PATH = './2/img_align_celeba/img_align_celeba'
 
-    if not os.path.exists(CROP_PATH): 
-        crop_faces(DATASET_PATH, CROP_PATH, ratio=0.1)
-    else: print('Dataset crop done.')
-
     attr_dataframe = pd.read_csv(ATTR_PATH)
     image_male_dict = attr_dataframe.set_index('image_id')['Male'].to_dict()
+    
+    if not os.path.exists(CROP_PATH): 
+        crop_faces(DATASET_PATH, CROP_PATH, image_male_dict, ratio=0.1)
+    else: print('Dataset crop done.')
 
     # 定义图像预处理流程
     transform = transforms.Compose([

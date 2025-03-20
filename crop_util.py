@@ -4,7 +4,7 @@ import numpy as np
 from mtcnn import MTCNN
 from tqdm import tqdm
 
-def crop_faces(input_dir, output_dir, target_size=(128, 128), ratio=0.5):
+def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), ratio=0.5):
     np.random.seed(703)
     
     detector = MTCNN()
