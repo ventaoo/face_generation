@@ -7,7 +7,7 @@ from tqdm import tqdm
 def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), ratio=0.5):
     np.random.seed(703)
     
-    detector = MTCNN()
+    detector = MTCNN(device='cuda')
     # Male Female
     os.makedirs(os.path.join(output_dir, 'male'), exist_ok=True)
     os.makedirs(os.path.join(output_dir, 'female'), exist_ok=True)
