@@ -3,11 +3,12 @@ import cv2
 import numpy as np
 from mtcnn import MTCNN
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), ratio=0.5):
     np.random.seed(703)
     
-    detector = MTCNN(device='cuda')
+    detector = MTCNN()
     # Male Female
     os.makedirs(os.path.join(output_dir, 'male'), exist_ok=True)
     os.makedirs(os.path.join(output_dir, 'female'), exist_ok=True)
@@ -50,3 +51,31 @@ def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), r
         output_path = os.path.join(os.path.join(output_dir, 'male' if image_male_dict.get(key) == 1 else 'female'), img_name)
         print(output_path)
         cv2.imwrite(output_path, cv2.cvtColor(face, cv2.COLOR_RGB2BGR))
+
+
+def plot_training_curves(history):
+    plt.figure(figsize=(12, 4))
+    
+    # 损失曲线
+    plt.subplot(131)
+    plt.plot(history['g_loss'], label='Generator Loss')
+    plt.plot(history['d_loss'], label='Critic Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    
+    # FID曲线
+    plt.subplot(132)
+    plt.plot(history['epochs'], history['fid'], 'r-')
+    plt.xlabel('Epoch')
+    plt.ylabel('FID')
+    
+    # IS曲线
+    plt.subplot(133)
+    plt.plot(history['epochs'], history['is_score'], 'g-')
+    plt.xlabel('Epoch')
+    plt.ylabel('Inception Score')
+    
+    plt.tight_layout()
+    plt.savefig('training_curves.png')
+    plt.close()

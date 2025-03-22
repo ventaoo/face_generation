@@ -1,23 +1,14 @@
 import os
-import sys
-import shutil
 
 import torch
 import numpy as np
-import pandas as pd
-import kagglehub
+
 from tqdm import tqdm
-from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
 from torchvision.utils import save_image
-import matplotlib.pyplot as plt
 from pytorch_fid import fid_score
 from torchmetrics.image.inception import InceptionScore
 
-from dataset.dataset import CelebADataset
-from gan.discriminator import Discriminator
-from gan.generator import Generator
-from crop_util import crop_faces
+from crop_util import plot_training_curves
 
 # 训练函数封装
 def train_wgan(
@@ -30,7 +21,6 @@ def train_wgan(
     n_critic=5,
     lambda_gp=10,      # 梯度惩罚系数
     use_gp=True,        # 是否使用梯度惩罚
-    use_sn=False,       # 是否使用谱归一化
     eval_interval=5,    # 评估间隔
     sample_interval=10, # 采样间隔
 ):
@@ -57,6 +47,7 @@ def train_wgan(
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{n_epochs}")
         
         for batch_idx, real_data in enumerate(pbar):
+            # real_label 用于在条件生成的时候使用
             real_imgs, real_label = real_data
             real_imgs = real_imgs.to(device)
             batch_size = real_imgs.size(0)
@@ -121,6 +112,7 @@ def train_wgan(
             })
             
             # 保存样本图像
+            os.makedirs('./samples', exist_ok=True)
             if batch_idx % sample_interval == 0:
                 save_image(
                     fake_imgs[:16], 
@@ -176,88 +168,3 @@ def train_wgan(
         plot_training_curves(history)
     
     return history
-
-def plot_training_curves(history):
-    plt.figure(figsize=(12, 4))
-    
-    # 损失曲线
-    plt.subplot(131)
-    plt.plot(history['g_loss'], label='Generator Loss')
-    plt.plot(history['d_loss'], label='Critic Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-    
-    # FID曲线
-    plt.subplot(132)
-    plt.plot(history['epochs'], history['fid'], 'r-')
-    plt.xlabel('Epoch')
-    plt.ylabel('FID')
-    
-    # IS曲线
-    plt.subplot(133)
-    plt.plot(history['epochs'], history['is_score'], 'g-')
-    plt.xlabel('Epoch')
-    plt.ylabel('Inception Score')
-    
-    plt.tight_layout()
-    plt.savefig('training_curves.png')
-    plt.close()
-
-
-if __name__ == "__main__":
-    device = sys.argv[1]
-
-    if not os.path.exists('./2'):
-        # Download latest version
-        path = kagglehub.dataset_download("jessicali9530/celeba-dataset")
-        print("Path to dataset files:", path)
-        shutil.move(path, './')
-    
-    G = Generator().to(device)
-    D = Discriminator().to(device)
-    opt_g = torch.optim.RMSprop(G.parameters(), lr=5e-5)
-    opt_d = torch.optim.RMSprop(D.parameters(), lr=5e-5)
-
-    CROP_PATH = './crop_img'
-    ATTR_PATH = './2/list_attr_celeba.csv'
-    DATASET_PATH = './2/img_align_celeba/img_align_celeba'
-
-    attr_dataframe = pd.read_csv(ATTR_PATH)
-    image_male_dict = attr_dataframe.set_index('image_id')['Male'].to_dict()
-
-    if not os.path.exists(CROP_PATH): 
-        crop_faces(DATASET_PATH, CROP_PATH, image_male_dict, ratio=0.1)
-    else: print('Dataset crop done.')
-
-    # 定义图像预处理流程
-    transform = transforms.Compose([
-        transforms.RandomHorizontalFlip(p=0.5),  # 数据增强
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
-    ])
-    images = []
-    for dir_path, dirnames, filenames in os.walk(CROP_PATH):
-        for file in tqdm(filenames):
-            images.append(os.path.join(dir_path, file))
-    print(f"Len of the images: {len(images)}")
-    train_images, test_images = images[: int(len(images) * 0.9)], images[int(len(images) * 0.9): ]
-
-    train_dataset = CelebADataset(train_images, image_male_dict, transform)
-
-    batch_size = 4
-    # 创建DataLoader
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True
-    )
-
-    # 启动训练
-    history = train_wgan(
-        G, D, train_loader,
-        opt_g, opt_d, device,
-        n_epochs=100,
-        use_gp=True,
-        eval_interval=5
-    )
