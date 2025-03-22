@@ -4,6 +4,7 @@ import argparse
 
 import torch
 import kagglehub
+import numpy as np
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
@@ -79,14 +80,25 @@ if __name__ == "__main__":
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
     ])
 
-    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.001)
+    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.0005)
 
     # 创建DataLoader
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
-        shuffle=True
+        shuffle=True,
+        drop_last=True
     )
+
+    # 计算FID 真实图像
+    if not os.path.exists('./real_stats.npz'):
+        from pytorch_fid.fid_score import calculate_activation_statistics
+        from pytorch_fid.inception import InceptionV3
+
+        block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[2048]
+        inception = InceptionV3([block_idx]).to(args.device)
+        mu_real, sigma_real = calculate_activation_statistics(files=train_dataset.images, model=inception, device=args.device)
+        np.savez('real_stats.npz', mu=mu_real, sigma=sigma_real)
 
     # 启动训练
     history = train_wgan(

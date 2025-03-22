@@ -2,3 +2,5 @@
 samples/*
 *.pyc
 crop_img/*
+examples/*
+checkpoints/*

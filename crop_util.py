@@ -11,7 +11,9 @@ import numpy as np
 import torch
 from facenet_pytorch import MTCNN
 from concurrent.futures import ThreadPoolExecutor
+from torchmetrics.image.inception import InceptionScore
 from tqdm import tqdm
+import torchvision.utils as vutils
 
 def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), ratio=0.5):
     np.random.seed(703)
@@ -99,3 +101,35 @@ def plot_training_curves(history):
     plt.tight_layout()
     plt.savefig('training_curves.png')
     plt.close()
+
+
+def calculate_inception_score(generator, device, latent_dim, num_samples=1000, batch_size=50):
+    # 初始化指标（降低特征维度）
+    inception = InceptionScore(feature='logits_unbiased').to(device)  # 使用logits特征（维度1000）
+    inception.eval()
+    
+    os.makedirs('./samples', exist_ok=True)
+    with torch.no_grad():
+        # 分批次生成样本
+        for i in range(0, num_samples, batch_size):
+            curr_batch = min(batch_size, num_samples - i)
+            z = torch.randn(curr_batch, latent_dim).to(device)
+            
+            # 生成图像并归一化到 [0,1]
+            samples = generator(z)
+            samples = (samples + 1) / 2  # 确保范围在 [0,1]
+            for j, sample in enumerate(samples):
+                vutils.save_image(sample, f"./samples/sample_{i}_{j}.jpg")
+            samples = (samples * 255).round().clamp(0, 255).to(torch.uint8)
+
+            # 提取特征并立即计算部分结果
+            inception.update(samples)
+            
+            # 手动释放内存
+            del z, samples
+            torch.cuda.empty_cache()
+    
+    # 最终计算
+    is_mean, is_std = inception.compute()
+    inception.reset()
+    return is_mean.item(), is_std.item()

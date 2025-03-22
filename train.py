@@ -5,10 +5,10 @@ import numpy as np
 
 from tqdm import tqdm
 from torchvision.utils import save_image
+from scipy.linalg import sqrtm
 from pytorch_fid import fid_score
-from torchmetrics.image.inception import InceptionScore
 
-from crop_util import plot_training_curves
+from crop_util import plot_training_curves, calculate_inception_score
 
 # 训练函数封装
 def train_wgan(
@@ -32,9 +32,6 @@ def train_wgan(
         'is_score': [],
         'epochs': []
     }
-    
-    # 初始化评估指标
-    inception_score = InceptionScore().to(device)
     
     # 训练循环
     for epoch in range(n_epochs):
@@ -112,11 +109,11 @@ def train_wgan(
             })
             
             # 保存样本图像
-            os.makedirs('./samples', exist_ok=True)
+            os.makedirs('./examples', exist_ok=True)
             if batch_idx % sample_interval == 0:
                 save_image(
                     fake_imgs[:16], 
-                    f"samples/epoch_{epoch}_batch_{batch_idx}.png",
+                    f"examples/epoch_{epoch}_batch_{batch_idx}.png",
                     nrow=4, 
                     normalize=True
                 )
@@ -132,35 +129,25 @@ def train_wgan(
         # ========================
         if (epoch+1) % eval_interval == 0:
             G.eval()
-            # 生成评估样本
-            all_samples = []
-            with torch.no_grad():
-                for _ in range(10):  # 生成1000个样本
-                    z = torch.randn(100, latent_dim).to(device)
-                    samples = G(z)
-                    all_samples.append(samples)
-                all_samples = torch.cat(all_samples, dim=0)
+            is_mean, is_std = calculate_inception_score(G, device, latent_dim, num_samples=1000, batch_size=100)
             
-            # 计算IS
-            inception_score.update(all_samples)
-            is_mean, is_std = inception_score.compute()
             
-            # 计算FID（需要真实图像统计量）
-            # 需提前计算真实图像的mu, sigma并保存为npz文件
-            fid = fid_score.calculate_fid_given_samples(
-                'real_stats.npz',
-                all_samples.cpu().numpy(),
+            # # 计算FID（需要真实图像统计量, 需提前计算真实图像的mu, sigma并保存为npz文件
+            fid = fid_score.calculate_fid_given_paths(
+                ['./crop_img/female', './samples'],
                 device=device,
-                batch_size=100
+                batch_size=4,
+                dims=2048
             )
             
             history['fid'].append(fid)
-            history['is_score'].append(is_mean.item())
+            history['is_score'].append(is_mean)
             history['epochs'].append(epoch)
             
             print(f"\nEpoch {epoch+1} | FID: {fid:.2f} | IS: {is_mean:.2f}±{is_std:.2f}")
             
             # 保存模型检查点
+            os.makedirs('./checkpoints', exist_ok=True)
             torch.save(G.state_dict(), f"checkpoints/G_epoch_{epoch}.pth")
             torch.save(D.state_dict(), f"checkpoints/D_epoch_{epoch}.pth")
             
