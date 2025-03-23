@@ -111,9 +111,9 @@ def train_wgan(
             os.makedirs('./examples', exist_ok=True)
             if batch_idx % sample_interval == 0:
                 save_image(
-                    fake_imgs[:8], 
+                    fake_imgs, 
                     f"examples/epoch_{epoch}_batch_{batch_idx}.png",
-                    nrow=4, 
+                    nrow=8, 
                     normalize=True
                 )
         
