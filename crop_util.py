@@ -19,7 +19,7 @@ def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), r
     np.random.seed(703)
     
     # 选择 GPU 或 CPU
-    device = 'mps' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
     # 初始化 MTCNN（比原版 MTCNN 更快）
     detector = MTCNN(keep_all=False, device=device)  # 只检测单张最大人脸
@@ -66,8 +66,8 @@ def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), r
         face = cv2.resize(face, target_size)
 
         # 确定性别并保存
-        gender = 'male' if image_male_dict.get(key) == 1 else 'female'
-        output_path = os.path.join(output_dir, gender, img_name)
+        # gender = 'male' if image_male_dict.get(key) == 1 else 'female'
+        output_path = os.path.join(output_dir, img_name)
         cv2.imwrite(output_path, cv2.cvtColor(face, cv2.COLOR_RGB2BGR))
 
     # 多线程加速

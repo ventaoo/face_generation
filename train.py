@@ -5,7 +5,6 @@ import numpy as np
 
 from tqdm import tqdm
 from torchvision.utils import save_image
-from scipy.linalg import sqrtm
 from pytorch_fid import fid_score
 
 from crop_util import plot_training_curves, calculate_inception_score
@@ -112,7 +111,7 @@ def train_wgan(
             os.makedirs('./examples', exist_ok=True)
             if batch_idx % sample_interval == 0:
                 save_image(
-                    fake_imgs[:16], 
+                    fake_imgs[:8], 
                     f"examples/epoch_{epoch}_batch_{batch_idx}.png",
                     nrow=4, 
                     normalize=True
@@ -134,7 +133,7 @@ def train_wgan(
             
             # # 计算FID（需要真实图像统计量, 需提前计算真实图像的mu, sigma并保存为npz文件
             fid = fid_score.calculate_fid_given_paths(
-                ['./crop_img/female', './samples'],
+                ['./crop_img', './samples'],
                 device=device,
                 batch_size=4,
                 dims=2048

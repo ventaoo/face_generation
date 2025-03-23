@@ -4,7 +4,6 @@ import argparse
 
 import torch
 import kagglehub
-import numpy as np
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
@@ -40,7 +39,7 @@ def parse_args():
     # 优化器参数
     parser.add_argument("--lr_g", type=float, default=1e-5,
                        help="Generator learning rate")
-    parser.add_argument("--lr_d", type=float, default=1e-5,
+    parser.add_argument("--lr_d", type=float, default=1e-4,
                        help="Discriminator learning rate")
     
     # 训练监控
@@ -76,29 +75,24 @@ if __name__ == "__main__":
     # 定义图像预处理流程
     transform = transforms.Compose([
         transforms.RandomHorizontalFlip(p=0.5),  # 数据增强
+        transforms.RandomRotation(degrees=10),  # 随机旋转
+        transforms.RandomResizedCrop(size=128, scale=(0.8, 1.0)),  # 随机裁剪和缩放
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),  # 颜色抖动
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
     ])
 
-    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.0005)
+    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.1)
 
     # 创建DataLoader
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        drop_last=True
+        drop_last=True,
+        num_workers=8,
+        pin_memory=True
     )
-
-    # 计算FID 真实图像
-    if not os.path.exists('./real_stats.npz'):
-        from pytorch_fid.fid_score import calculate_activation_statistics
-        from pytorch_fid.inception import InceptionV3
-
-        block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[2048]
-        inception = InceptionV3([block_idx]).to(args.device)
-        mu_real, sigma_real = calculate_activation_statistics(files=train_dataset.images, model=inception, device=args.device)
-        np.savez('real_stats.npz', mu=mu_real, sigma=sigma_real)
 
     # 启动训练
     history = train_wgan(
@@ -107,5 +101,8 @@ if __name__ == "__main__":
         n_epochs=args.n_epochs,
         use_gp=True,
         eval_interval=args.eval_interval,
-        sample_interval=args.sample_interval
+        sample_interval=args.sample_interval,
+        n_critic=7
     )
+
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 64 --lr_g 1e-4 --lr_d 5e-5 --n_epochs 100 --use_gp --eval_interval 5
