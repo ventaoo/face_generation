@@ -21,7 +21,7 @@ class CelebADataset(Dataset):
 
         # 不存在则处理原始图片并保存
         if not os.path.exists(crop_img_path): 
-            crop_faces(image_path, crop_img_path, self.image_male_dict, ratio=ratio)
+            crop_faces(image_path, crop_img_path, self.image_male_dict, ratio=ratio, target_size=(64, 64))
         else: print('Dataset crop done.')
 
         self.images = []

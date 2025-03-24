@@ -103,7 +103,7 @@ if __name__ == "__main__":
         n_critic=7
     )
 
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 128 --lr_g 1e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 256 --lr_g 1e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
     # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device mps --batch_size 128 --lr_g 2e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
 
 
