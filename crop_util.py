@@ -25,8 +25,9 @@ def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), r
     detector = MTCNN(keep_all=False, device=device)  # 只检测单张最大人脸
 
     # 创建输出目录
-    os.makedirs(os.path.join(output_dir, 'male'), exist_ok=True)
-    os.makedirs(os.path.join(output_dir, 'female'), exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+    # os.makedirs(os.path.join(output_dir, 'male'), exist_ok=True)
+    # os.makedirs(os.path.join(output_dir, 'female'), exist_ok=True)
 
     images = os.listdir(input_dir)
 
