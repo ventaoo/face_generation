@@ -75,11 +75,12 @@ if __name__ == "__main__":
     # 定义图像预处理流程
     transform = transforms.Compose([
         transforms.RandomHorizontalFlip(p=0.5),  # 数据增强
+        transforms.Resize((64, 64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
     ])
 
-    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.05)
+    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.1)
 
     # 创建DataLoader
     train_loader = DataLoader(
@@ -102,7 +103,8 @@ if __name__ == "__main__":
         n_critic=7
     )
 
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 64 --lr_g 1e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 128 --lr_g 1e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device mps --batch_size 128 --lr_g 2e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
 
 
 

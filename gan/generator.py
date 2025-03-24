@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class Generator(nn.Module):
-    def __init__(self, latent_dim=100, img_channels=3):
+    def __init__(self, latent_dim=128, img_channels=3):
         super().__init__()
         self.init_size = 4  # 初始特征图尺寸
         self.fc = nn.Sequential(
@@ -21,10 +21,7 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(128, 64, 4, 2, 1),   # 16x16 -> 32x32
             nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose2d(64, 32, 4, 2, 1),  # 32x32 -> 64x64
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.2),
-            nn.ConvTranspose2d(32, img_channels, 4, 2, 1),  # 64x64 -> 128x128
+            nn.ConvTranspose2d(64, img_channels, 4, 2, 1),  # 32x32 -> 64x64
             nn.Tanh()  # 输出归一化到[-1,1]
         )
 
@@ -35,6 +32,6 @@ class Generator(nn.Module):
         return img
     
 if __name__ == '__main__':
-    z = torch.randn(2, 100)
+    z = torch.randn(2, 128)
     G = Generator()
     print(G(z).shape)

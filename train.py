@@ -16,7 +16,7 @@ def train_wgan(
     opt_g, opt_d,
     device,
     n_epochs=100,
-    latent_dim=100,
+    latent_dim=128,
     n_critic=5,
     lambda_gp=10,      # 梯度惩罚系数
     use_gp=True,        # 是否使用梯度惩罚
