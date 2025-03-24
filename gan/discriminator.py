@@ -13,7 +13,7 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2),
             spectral_norm(nn.Conv2d(256, 512, 4, 2, 1)),
             nn.LeakyReLU(0.2),
-            spectral_norm(nn.Conv2d(512, 1, 4, 1, 0)),
+            spectral_norm(nn.Conv2d(512, 1, 3, 1, 1)),
         )
 
     def forward(self, img):
