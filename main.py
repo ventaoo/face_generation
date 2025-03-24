@@ -79,7 +79,7 @@ if __name__ == "__main__":
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
     ])
 
-    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.05)
+    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.005)
 
     # 创建DataLoader
     train_loader = DataLoader(
@@ -99,7 +99,15 @@ if __name__ == "__main__":
         use_gp=True,
         eval_interval=args.eval_interval,
         sample_interval=args.sample_interval,
-        n_critic=8
+        n_critic=7
     )
 
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 64 --lr_g 1e-4 --lr_d 5e-5 --n_epochs 100 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 64 --lr_g 1e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
+
+
+
+# TODO
+# 测试是否可以正常加载模型进行推理
+# ✅固定测试的代码的
+# 查看指标是否计算正确
+# ✅查看是否可以优化

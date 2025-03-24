@@ -41,7 +41,8 @@ def train_wgan(
         
         # 进度条
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{n_epochs}")
-        
+        fixed_z = torch.randn(64, latent_dim).to(device)  # 64 个固定噪声样本
+
         for batch_idx, real_data in enumerate(pbar):
             # real_label 用于在条件生成的时候使用
             real_imgs, real_label = real_data
@@ -108,10 +109,12 @@ def train_wgan(
             })
             
             # 保存样本图像
-            os.makedirs('./examples', exist_ok=True)
             if batch_idx % sample_interval == 0:
+                os.makedirs('./examples', exist_ok=True)
+                with torch.no_grad():
+                    fixed_fake_imgs = G(fixed_z)  # 用固定的噪声生成图像
                 save_image(
-                    fake_imgs, 
+                    fixed_fake_imgs, 
                     f"examples/epoch_{epoch}_batch_{batch_idx}.png",
                     nrow=8, 
                     normalize=True
@@ -135,7 +138,7 @@ def train_wgan(
             fid = fid_score.calculate_fid_given_paths(
                 ['./crop_img', './samples'],
                 device=device,
-                batch_size=4,
+                batch_size=100,
                 dims=2048
             )
             
