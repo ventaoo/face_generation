@@ -95,8 +95,8 @@ if __name__ == "__main__":
     if args.is_conditional:
         G = Generator_conditional().to(args.device)
         D = Discriminator_conditional().to(args.device)
-        opt_g = torch.optim.RMSprop(G.parameters(), lr=args.lr_g)
-        opt_d = torch.optim.RMSprop(D.parameters(), lr=args.lr_d)
+        opt_g = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(0.5, 0.9))
+        opt_d = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(0.5, 0.9))
         history = train_wgan_conditional(
             G, D, train_loader,
             opt_g, opt_d, args.device,
@@ -109,8 +109,8 @@ if __name__ == "__main__":
     else:
         G = Generator().to(args.device)
         D = Discriminator().to(args.device)
-        opt_g = torch.optim.RMSprop(G.parameters(), lr=args.lr_g)
-        opt_d = torch.optim.RMSprop(D.parameters(), lr=args.lr_d)
+        opt_g = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(0.5, 0.9))
+        opt_d = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(0.5, 0.9))
         history = train_wgan(
             G, D, train_loader,
             opt_g, opt_d, args.device,
@@ -133,3 +133,10 @@ if __name__ == "__main__":
 # ✅固定测试的代码的
 # 查看指标是否计算正确
 # ✅查看是否可以优化
+
+
+# TODO
+# 1. 学习了解KL散度
+# 2. 了解梯度惩罚
+# 3. 了解谱归一化
+# 4. WGAN

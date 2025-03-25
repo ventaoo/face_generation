@@ -42,6 +42,7 @@ def train_wgan_conditional(
         # 进度条
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{n_epochs}")
         fixed_z = torch.randn(64, latent_dim).to(device)  # 64 个固定噪声样本
+        # TODO Fixed 固定产生男的和女的，来可视化结果
         fixed_labels = torch.randint(0, 2, (64,)).to(device)
         for batch_idx, real_data in enumerate(pbar):
             # real_label 用于在条件生成的时候使用

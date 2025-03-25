@@ -37,6 +37,7 @@ class Generator_conditional(nn.Module):
         self.init_size = 4  # 初始特征图尺寸
         self.label_embedding = nn.Sequential(
             nn.Embedding(num_classes, embedding_dim),
+            nn.Tanh()
         )
         self.fc = nn.Sequential(
             nn.Linear(latent_dim, 512 * self.init_size ** 2),
@@ -62,7 +63,7 @@ class Generator_conditional(nn.Module):
 
     def forward(self, z, labels):
         label_embedding = self.label_embedding(labels)
-        z = self.gamma * label_embedding + z
+        z = label_embedding + z
         out = self.fc(z)
         out = out.view(out.shape[0], 512, self.init_size, self.init_size)
         img = self.conv_blocks(out)
