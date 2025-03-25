@@ -1,19 +1,21 @@
 import os
 import cv2
 import numpy as np
-from facenet_pytorch import MTCNN
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-import os
-import cv2
-import numpy as np
 import torch
+import json
 from facenet_pytorch import MTCNN
 from concurrent.futures import ThreadPoolExecutor
 from torchmetrics.image.inception import InceptionScore
 from tqdm import tqdm
 import torchvision.utils as vutils
+
+# 保存历史记录到 JSON 文件
+def save_history_to_json(history, filename):
+    with open(filename, 'w') as f:
+        json.dump(history, f)
+    print(f"History saved to {filename}")
 
 def crop_faces(input_dir, output_dir, image_male_dict, target_size=(128, 128), ratio=0.5):
     np.random.seed(703)
@@ -115,9 +117,10 @@ def calculate_inception_score(generator, device, latent_dim, num_samples=1000, b
         for i in range(0, num_samples, batch_size):
             curr_batch = min(batch_size, num_samples - i)
             z = torch.randn(curr_batch, latent_dim).to(device)
+            labels = torch.randint(0, 2, (batch_size,)).to(device)  # 假标签
             
             # 生成图像并归一化到 [0,1]
-            samples = generator(z)
+            samples = generator(z, labels)
             samples = (samples + 1) / 2  # 确保范围在 [0,1]
             for j, sample in enumerate(samples):
                 vutils.save_image(sample, f"./samples/sample_{i}_{j}.jpg")

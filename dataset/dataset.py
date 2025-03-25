@@ -41,4 +41,6 @@ class CelebADataset(Dataset):
         if self.transform:
             image = self.transform(image)
         
-        return image, self.image_male_dict.get(key)
+        label = 0 if self.image_male_dict.get(key) == -1 else 1
+        return image, label
+    

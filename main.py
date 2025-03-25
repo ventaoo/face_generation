@@ -8,9 +8,11 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
 from dataset.dataset import CelebADataset
-from gan.discriminator import Discriminator
-from gan.generator import Generator
+from gan.discriminator import Discriminator, Discriminator_conditional
+from gan.generator import Generator, Generator_conditional
 from train import train_wgan
+from train_conditional import train_wgan_conditional
+from crop_util import save_history_to_json
 
 
 def parse_args():
@@ -56,6 +58,9 @@ def parse_args():
     parser.add_argument("--lambda_gp", type=float, default=10.0,
                        help="Gradient penalty coefficient")
     
+    # 模式设置
+    parser.add_argument("--is_conditional", action="store_true")
+    
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -66,16 +71,10 @@ if __name__ == "__main__":
         path = kagglehub.dataset_download("jessicali9530/celeba-dataset")
         print("Path to dataset files:", path)
         shutil.move(path, './')
-    
-    G = Generator().to(args.device)
-    D = Discriminator().to(args.device)
-    opt_g = torch.optim.RMSprop(G.parameters(), lr=args.lr_g)
-    opt_d = torch.optim.RMSprop(D.parameters(), lr=args.lr_d)
 
     # 定义图像预处理流程
     transform = transforms.Compose([
         transforms.RandomHorizontalFlip(p=0.5),  # 数据增强
-        transforms.Resize((64, 64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
     ])
@@ -93,19 +92,40 @@ if __name__ == "__main__":
     )
 
     # 启动训练
-    history = train_wgan(
-        G, D, train_loader,
-        opt_g, opt_d, args.device,
-        n_epochs=args.n_epochs,
-        use_gp=True,
-        eval_interval=args.eval_interval,
-        sample_interval=args.sample_interval,
-        n_critic=7
-    )
+    if args.is_conditional:
+        G = Generator_conditional().to(args.device)
+        D = Discriminator_conditional().to(args.device)
+        opt_g = torch.optim.RMSprop(G.parameters(), lr=args.lr_g)
+        opt_d = torch.optim.RMSprop(D.parameters(), lr=args.lr_d)
+        history = train_wgan_conditional(
+            G, D, train_loader,
+            opt_g, opt_d, args.device,
+            n_epochs=args.n_epochs,
+            use_gp=True,
+            eval_interval=args.eval_interval,
+            sample_interval=args.sample_interval,
+            n_critic=5
+        )
+    else:
+        G = Generator().to(args.device)
+        D = Discriminator().to(args.device)
+        opt_g = torch.optim.RMSprop(G.parameters(), lr=args.lr_g)
+        opt_d = torch.optim.RMSprop(D.parameters(), lr=args.lr_d)
+        history = train_wgan(
+            G, D, train_loader,
+            opt_g, opt_d, args.device,
+            n_epochs=args.n_epochs,
+            use_gp=True,
+            eval_interval=args.eval_interval,
+            sample_interval=args.sample_interval,
+            n_critic=5
+        )
 
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 256 --lr_g 1e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device mps --batch_size 128 --lr_g 2e-4 --lr_d 2e-4 --n_epochs 150 --use_gp --eval_interval 5
+    save_history_to_json(history, './training_history.json')
 
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 256 --lr_g 1e-4 --lr_d 3e-5 --n_epochs 150 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device mps --batch_size 4 --lr_g 2e-4 --lr_d 5e-5 --n_epochs 150 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 512 --lr_g 2e-4 --lr_d 5e-5 --n_epochs 150 --use_gp --eval_interval 5
 
 
 # TODO
