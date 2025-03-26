@@ -79,7 +79,7 @@ if __name__ == "__main__":
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 归一化到[-1,1]
     ])
 
-    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.1)
+    train_dataset = CelebADataset(args.data_path, args.crop_path, args.attr_path, transform, ratio=0.2)
 
     # 创建DataLoader
     train_loader = DataLoader(
@@ -95,8 +95,8 @@ if __name__ == "__main__":
     if args.is_conditional:
         G = Generator_conditional().to(args.device)
         D = Discriminator_conditional().to(args.device)
-        opt_g = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(0.5, 0.9))
-        opt_d = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(0.5, 0.9))
+        opt_g = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(0, 0.9))
+        opt_d = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(0, 0.9))
         history = train_wgan_conditional(
             G, D, train_loader,
             opt_g, opt_d, args.device,
@@ -104,13 +104,14 @@ if __name__ == "__main__":
             use_gp=True,
             eval_interval=args.eval_interval,
             sample_interval=args.sample_interval,
-            n_critic=5
+            n_critic=5,
+            latent_dim=100
         )
     else:
         G = Generator().to(args.device)
         D = Discriminator().to(args.device)
-        opt_g = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(0.5, 0.9))
-        opt_d = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(0.5, 0.9))
+        opt_g = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(0, 0.9))
+        opt_d = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(0, 0.9))
         history = train_wgan(
             G, D, train_loader,
             opt_g, opt_d, args.device,
@@ -123,8 +124,8 @@ if __name__ == "__main__":
 
     save_history_to_json(history, './training_history.json')
 
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 256 --lr_g 1e-4 --lr_d 3e-5 --n_epochs 150 --use_gp --eval_interval 5
-    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device mps --batch_size 4 --lr_g 2e-4 --lr_d 5e-5 --n_epochs 150 --use_gp --eval_interval 5
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 512 --lr_g 1e-4 --lr_d 1e-5 --n_epochs 200 --use_gp --eval_interval 1
+    # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device mps --batch_size 4 --lr_g 2e-4 --lr_d 2e-4 --n_epochs 2 --use_gp --eval_interval 1
     # python main.py --crop_path ./crop_img --attr_path ./2/list_attr_celeba.csv --data_path ./2/img_align_celeba/img_align_celeba --device cuda --batch_size 512 --lr_g 2e-4 --lr_d 5e-5 --n_epochs 150 --use_gp --eval_interval 5
 
 

@@ -41,9 +41,8 @@ def train_wgan_conditional(
         
         # 进度条
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{n_epochs}")
-        fixed_z = torch.randn(64, latent_dim).to(device)  # 64 个固定噪声样本
-        # TODO Fixed 固定产生男的和女的，来可视化结果
-        fixed_labels = torch.randint(0, 2, (64,)).to(device)
+        fixed_z = torch.randn(16, latent_dim).to(device)  # 64 个固定噪声样本
+        fixed_labels = torch.cat([torch.zeros(8, dtype=torch.long), torch.ones(8, dtype=torch.long)]).to(device)
         for batch_idx, real_data in enumerate(pbar):
             # real_label 用于在条件生成的时候使用
             real_imgs, real_labels = real_data
@@ -63,8 +62,9 @@ def train_wgan_conditional(
                 
                 # 计算判别器损失
                 real_scores = D(real_imgs, real_labels)
-                fake_scores = D(fake_imgs, fake_labels)
+                fake_scores = D(fake_imgs, real_labels)
 
+                # print(f'fake labels: {fake_labels} | real labels: {real_labels}')
                 # print(f"real shape: {real_imgs.shape} | fake shape: {fake_imgs.shape}")
                 # print(f"Min value: {real_imgs.min().item()}, Max value: {real_imgs.max().item()}")
                 # print(f"Min value: {fake_imgs.min().item()}, Max value: {fake_imgs.max().item()}")
@@ -141,7 +141,7 @@ def train_wgan_conditional(
         # ========================
         if (epoch+1) % eval_interval == 0:
             G.eval()
-            is_mean, is_std = calculate_inception_score(G, device, latent_dim, num_samples=1000, batch_size=100)
+            is_mean, is_std = calculate_inception_score(G, device, latent_dim, num_samples=1000, batch_size=100, is_conditional=True)
             
             
             # # 计算FID（需要真实图像统计量, 需提前计算真实图像的mu, sigma并保存为npz文件

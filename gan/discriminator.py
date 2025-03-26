@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from torch.nn.utils import spectral_norm
 
@@ -36,15 +37,17 @@ class Discriminator_conditional(nn.Module):
         )
 
         self.label_processing = nn.Sequential(
-            nn.Conv2d(512, 1, 4, 3, 0)
+            nn.Conv2d(512, 1, 4, 1, 0)
         )
 
     def forward(self, img, labels):
         label_embedding = self.label_embedding(labels) # [1, 512]
-        label_embedding = label_embedding.unsqueeze(2).unsqueeze(3)
+        label_embedding = label_embedding.unsqueeze(2).unsqueeze(3) # [1, 512, 1, 1]
         img = self.model(img) # [1, 512, 4, 4]
-        out = self.label_processing(img * label_embedding)
-        return out.view(-1)  # 展平为1D分数
+        out = self.label_processing(img) # [1, 1, 1, 1]
+        proj = torch.sum(out * label_embedding, dim=1, keepdim=True)
+        proj = torch.mean(proj, dim=[2, 3])
+        return out.view(-1) + proj.view(-1)
 
 if __name__ == "__main__":
     import torch
@@ -58,13 +61,9 @@ if __name__ == "__main__":
     # 运行前向传播
     output = discriminator(img)
 
-    # 打印输出形状
-    print(discriminator_conditional(img, labels))
-
-
     from generator import Generator_conditional
-    z = torch.randn(10, 128)
-    labels = torch.randint(0, 2, (10,))  # 随机类别
+    z = torch.randn(2, 100)
+    labels = torch.randint(0, 2, (2,))  # 随机类别
     G_conditional = Generator_conditional()
     fake_img = G_conditional(z, labels)
     

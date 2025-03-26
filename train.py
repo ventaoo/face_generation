@@ -41,8 +41,7 @@ def train_wgan(
         
         # 进度条
         pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{n_epochs}")
-        fixed_z = torch.randn(64, latent_dim).to(device)  # 64 个固定噪声样本
-
+        fixed_z = torch.randn(16, latent_dim).to(device)  # 64 个固定噪声样本
         for batch_idx, real_data in enumerate(pbar):
             # real_label 用于在条件生成的时候使用
             real_imgs, real_label = real_data

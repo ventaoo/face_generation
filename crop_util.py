@@ -106,7 +106,7 @@ def plot_training_curves(history):
     plt.close()
 
 
-def calculate_inception_score(generator, device, latent_dim, num_samples=1000, batch_size=50):
+def calculate_inception_score(generator, device, latent_dim, num_samples=1000, batch_size=50, is_conditional=False):
     # 初始化指标（降低特征维度）
     inception = InceptionScore(feature='logits_unbiased').to(device)  # 使用logits特征（维度1000）
     inception.eval()
@@ -120,7 +120,7 @@ def calculate_inception_score(generator, device, latent_dim, num_samples=1000, b
             labels = torch.randint(0, 2, (batch_size,)).to(device)  # 假标签
             
             # 生成图像并归一化到 [0,1]
-            samples = generator(z, labels)
+            samples = generator(z, labels) if is_conditional else generator(z)
             samples = (samples + 1) / 2  # 确保范围在 [0,1]
             for j, sample in enumerate(samples):
                 vutils.save_image(sample, f"./samples/sample_{i}_{j}.jpg")
